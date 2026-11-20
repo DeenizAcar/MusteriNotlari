@@ -162,20 +162,79 @@
         <td class="d"><span class="d-date">${esc(fmtDate(n.date))}</span> <span class="d-time">${esc(n.time || '')}${n.alarm && n.alarm.enabled ? '<span class="bell" title="Alarm var">🔔</span>' : ''}</span></td>
         <td><div class="p-cell">${personLine(n.name, n.phone)}${personLine(n.name2, n.phone2)}</div></td>
         <td><div class="n-text">${esc(n.notes || '')}</div></td>
-        <td><button type="button" class="del" title="Sil" aria-label="Sil">&times;</button></td>
       </tr>`).join('');
     const empty = $('empty');
     empty.hidden = rows.length > 0;
     empty.textContent = notes.length ? 'Aramaya uyan not bulunamadı.' : 'Henüz not yok. “Not Ekle” ile başlayın.';
   }
 
+  // ---------- Satıra basılı tutunca "Kaydı Sil" menüsü ----------
+  let suppressClickUntil = 0;
+  let rowMenuAction = null;
+  const rowMenu = $('rowMenu');
+  function openRowMenu(x, y, action) {
+    rowMenuAction = action;
+    rowMenu.hidden = false;
+    const w = rowMenu.offsetWidth, h = rowMenu.offsetHeight;
+    rowMenu.style.left = Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px';
+    rowMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - h - 8)) + 'px';
+  }
+  function closeRowMenu() { rowMenu.hidden = true; rowMenuAction = null; }
+  $('rowMenuDel').addEventListener('click', () => {
+    const act = rowMenuAction;
+    closeRowMenu();
+    if (act) act();
+  });
+  document.addEventListener('pointerdown', (e) => { if (!rowMenu.hidden && !rowMenu.contains(e.target)) closeRowMenu(); }, true);
+  window.addEventListener('resize', closeRowMenu);
+  document.addEventListener('scroll', closeRowMenu, true);
+
+  function attachRowMenu(body, onDelete) {
+    let timer = null, start = null, row = null;
+    const cancel = () => {
+      clearTimeout(timer); timer = null;
+      if (row) row.classList.remove('pressing');
+      row = null;
+    };
+    body.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      const tr = e.target.closest('tr[data-id]');
+      if (!tr || e.target.closest('a')) return;
+      cancel();
+      row = tr; start = { x: e.clientX, y: e.clientY };
+      tr.classList.add('pressing');
+      const id = tr.dataset.id;
+      timer = setTimeout(() => {
+        cancel();
+        suppressClickUntil = Date.now() + 700;
+        if (navigator.vibrate) { try { navigator.vibrate(30); } catch (err) { /* */ } }
+        openRowMenu(start.x, start.y, () => onDelete(id));
+      }, 550);
+    });
+    body.addEventListener('pointermove', (e) => {
+      if (timer && start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) cancel();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => body.addEventListener(ev, () => { if (timer) cancel(); }));
+    // Sağ tık (bilgisayar) ve tarayıcının kendi basılı tutma menüsü yerine
+    body.addEventListener('contextmenu', (e) => {
+      const tr = e.target.closest('tr[data-id]');
+      if (!tr || e.target.closest('a')) return;
+      e.preventDefault();
+      if (!rowMenu.hidden) return; // basılı tutma ile zaten açıldı
+      cancel();
+      const id = tr.dataset.id;
+      openRowMenu(e.clientX, e.clientY, () => onDelete(id));
+    });
+  }
+
   let lastTap = { id: null, t: 0 };
+  attachRowMenu(tbody, (id) => deleteNote(id));
   tbody.addEventListener('click', (e) => {
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;
     const id = tr.dataset.id;
     if (e.target.closest('a.p-tel')) { e.stopPropagation(); return; } // telefon arama ekranı açılır
-    if (e.target.closest('button.del')) { e.stopPropagation(); deleteNote(id); return; }
+    if (Date.now() < suppressClickUntil) return; // basılı tutma sonrası tıklama
     const now = Date.now();
     if (lastTap.id === id && now - lastTap.t < 450) {
       lastTap = { id: null, t: 0 };
@@ -557,14 +616,13 @@
     alarmNoteId = n.id;
     $('alarmTitle').textContent = personLabel(n);
     $('alarmText').textContent = n.notes || '';
-    $('snoozeOpts').hidden = true;
     $('alarmModal').hidden = false;
     selectNote(n.id);
     const tr = tbody.querySelector(`tr[data-id="${CSS.escape(n.id)}"]`);
     if (tr) tr.scrollIntoView({ block: 'nearest' });
   }
   let alarmNoteId = null;
-  function closeAlarmPopup() { $('alarmModal').hidden = true; $('snoozeOpts').hidden = true; alarmNoteId = null; }
+  function closeAlarmPopup() { $('alarmModal').hidden = true; alarmNoteId = null; }
   $('alarmOk').addEventListener('click', closeAlarmPopup);
 
   // Notu sil: not alarmıyla birlikte silinir
@@ -597,18 +655,6 @@ Alarm silinecek. Emin misiniz?`))) return;
     closeAlarmPopup();
   });
 
-  // Ertele
-  $('alarmSnooze').addEventListener('click', () => { $('snoozeOpts').hidden = !$('snoozeOpts').hidden; });
-  $('snoozeOpts').addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-min]');
-    if (!b) return;
-    const n = byId(alarmNoteId);
-    if (n && n.alarm && n.alarm.enabled) {
-      n.alarm.snoozeAt = Date.now() + Number(b.dataset.min) * 60000;
-      save(); scheduleNative(); updateNextInfo();
-    }
-    closeAlarmPopup();
-  });
 
   function checkAlarms() {
     const now = Date.now();
@@ -643,6 +689,11 @@ Alarm silinecek. Emin misiniz?`))) return;
   const arSearch = createChipSearch($('arSearchBox'), $('arChips'), $('arSearchInput'), $('arClear'), () => renderArchive());
   const fmtDateTime = (ms) => { const d = new Date(ms); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${nowTime(d)}`; };
   const archiveLabel = (r) => [r.name, r.phone].filter(Boolean).join(' - ') || '(isimsiz)';
+  // Arşivde telefon tıklanamaz, sadece kalın yazılır
+  function archivePerson(r) {
+    if (!r.name && !r.phone) return '<span class="p-name">(isimsiz)</span>';
+    return `<div class="p-line">${r.name ? `<span class="p-name">${esc(r.name)}</span>` : ''}${r.phone ? `<span class="p-tel-plain">${esc(r.phone)}</span>` : ''}</div>`;
+  }
   function renderArchive() {
     const terms = arSearch.terms();
     const rows = archive.slice().sort((a, b) => b.at - a.at).filter((r) => {
@@ -656,10 +707,9 @@ Alarm silinecek. Emin misiniz?`))) return;
       const [d, t] = fmtDateTime(r.at).split(' ');
       return `
       <tr data-id="${r.id}">
-        <td><div class="p-cell">${personLine(r.name, r.phone) || '<span class="p-name">(isimsiz)</span>'}</div></td>
+        <td><div class="p-cell">${archivePerson(r)}</div></td>
         <td class="d"><span class="d-date">${d}</span> <span class="d-time">${t}</span></td>
         <td><div class="n-text">${esc(r.notes || '')}</div></td>
-        <td><button type="button" class="del" title="Sil" aria-label="Sil">&times;</button></td>
       </tr>`;
     }).join('');
     $('arCount').textContent = archive.length ? `(${rows.length}/${archive.length})` : '';
@@ -667,17 +717,28 @@ Alarm silinecek. Emin misiniz?`))) return;
     empty.hidden = rows.length > 0;
     empty.textContent = archive.length ? 'Aramaya uyan arşiv kaydı bulunamadı.' : 'Arşiv boş. Çalan alarmlar burada listelenir.';
   }
+  let arLastTap = { id: null, t: 0 };
   arBody.addEventListener('click', async (e) => {
-    if (e.target.closest('a.p-tel')) return;
-    const b = e.target.closest('button.del');
-    if (!b) return;
-    const id = b.closest('tr').dataset.id;
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    if (Date.now() < suppressClickUntil) return; // basılı tutma sonrası tıklama
+    // Çift tıklama: kaydı salt okunur pencerede aç
+    const now = Date.now();
+    if (arLastTap.id === tr.dataset.id && now - arLastTap.t < 450) {
+      arLastTap = { id: null, t: 0 };
+      openArView(tr.dataset.id);
+    } else {
+      arLastTap = { id: tr.dataset.id, t: now };
+    }
+  });
+  async function deleteArchive(id) {
     const r = archive.find((x) => x.id === id);
     if (!r) return;
     if (!(await confirmBox(`${archiveLabel(r)}\n${fmtDateTime(r.at)}\n\nArşiv kaydı silinsin mi?`))) return;
     archive = archive.filter((x) => x.id !== id);
     saveArchive(); renderArchive();
-  });
+  }
+  attachRowMenu(arBody, (id) => deleteArchive(id));
   // Filtreye uyan (ekranda listelenen) arşiv kayıtlarını sil
   $('arDelFiltered').addEventListener('click', async () => {
     if (!arFilteredIds.length) return;
@@ -689,6 +750,16 @@ Alarm silinecek. Emin misiniz?`))) return;
     archive = archive.filter((x) => !del.has(x.id));
     saveArchive(); renderArchive();
   });
+  function openArView(id) {
+    const r = archive.find((x) => x.id === id);
+    if (!r) return;
+    $('avPerson').textContent = archiveLabel(r);
+    $('avDate').textContent = fmtDateTime(r.at);
+    $('avNotes').textContent = r.notes || '';
+    $('arViewModal').hidden = false;
+  }
+  const closeArView = () => { $('arViewModal').hidden = true; };
+  $('avClose').addEventListener('click', closeArView);
   function openArchive() { renderArchive(); $('archiveView').hidden = false; }
   function closeArchive() { $('archiveView').hidden = true; }
   $('archiveBtn').addEventListener('click', openArchive);
@@ -770,10 +841,12 @@ Alarm silinecek. Emin misiniz?`))) return;
   // ---------- Çıkış onayı ----------
   let exiting = false;
   async function handleBack() {
+    if (!rowMenu.hidden) { closeRowMenu(); return; }
     if (!$('confirmModal').hidden) { closeConfirm(false); return; }
     if (!$('clockModal').hidden) { closeClock(false); return; }
     if (!$('alarmModal').hidden) { closeAlarmPopup(); return; }
     if (!$('noteModal').hidden) { cancelNote(); return; }
+    if (!$('arViewModal').hidden) { closeArView(); return; }
     if (!$('archiveView').hidden) { closeArchive(); return; }
     if (exiting) return;
     exiting = true;
@@ -788,10 +861,12 @@ Alarm silinecek. Emin misiniz?`))) return;
   // Esc ile pencere kapatma (masaüstü)
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!$('confirmModal').hidden) closeConfirm(false);
+    if (!rowMenu.hidden) closeRowMenu();
+    else if (!$('confirmModal').hidden) closeConfirm(false);
     else if (!$('clockModal').hidden) closeClock(false);
     else if (!$('alarmModal').hidden) closeAlarmPopup();
     else if (!$('noteModal').hidden) cancelNote();
+    else if (!$('arViewModal').hidden) closeArView();
     else if (!$('archiveView').hidden) closeArchive();
   });
 

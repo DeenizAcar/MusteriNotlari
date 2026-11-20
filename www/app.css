@@ -208,10 +208,6 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
 
 .btn.warn { background: #fff3e0; border-color: #f0a35a; color: #a14d00; }
 .alarm-actions { flex-wrap: wrap; }
-.snooze-opts { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-.snooze-opts[hidden] { display: none; }
-.snooze-opts > span { color: var(--muted); font-size: 13px; }
-.snooze-opts .btn { padding: 6px 10px; }
 /* Kişiler hücresi en fazla 5 satır */
 .p-cell { max-height: calc(5 * 1.35em + 3px); overflow: hidden; }
 
@@ -227,3 +223,21 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
   .c-adate { width: 84px; }
 }
 .btn.danger:disabled { opacity: .45; }
+.p-tel-plain { font-weight: 700; color: var(--primary); white-space: nowrap; }
+.ro { border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; background: #f7f8fa; min-height: 37px; overflow-wrap: anywhere; }
+.ro-notes { white-space: pre-wrap; min-height: 110px; max-height: 50vh; overflow: auto; }
+#arBody tr { cursor: default; }
+
+/* Basılı tutunca açılan menü */
+.ctx-menu {
+  position: fixed; z-index: 35; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); padding: 4px; min-width: 140px;
+}
+.ctx-menu[hidden] { display: none; }
+.ctx-menu button {
+  display: block; width: 100%; text-align: left; border: 0; background: transparent;
+  padding: 10px 14px; border-radius: 6px; color: var(--danger); font-weight: 600; cursor: pointer;
+}
+.ctx-menu button:hover { background: #fdecec; }
+.notes tbody tr { -webkit-touch-callout: none; }
+.notes tbody tr.pressing { background: var(--sel); }

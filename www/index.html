@@ -30,7 +30,7 @@
   <main class="table-wrap" id="tableWrap">
     <table class="notes">
       <thead>
-        <tr><th class="c-date">Tarih / Saat</th><th class="c-person">Kişiler</th><th class="c-notes">Notlar</th><th class="c-del"></th></tr>
+        <tr><th class="c-date">Tarih / Saat</th><th class="c-person">Kişiler</th><th class="c-notes">Notlar</th></tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -93,13 +93,18 @@
     <main class="table-wrap">
       <table class="notes">
         <thead>
-          <tr><th class="c-aperson">İlgili Kişi</th><th class="c-adate">Alarm Tarihi / Saati</th><th class="c-notes">Notlar</th><th class="c-del"></th></tr>
+          <tr><th class="c-aperson">İlgili Kişi</th><th class="c-adate">Alarm Tarihi / Saati</th><th class="c-notes">Notlar</th></tr>
         </thead>
         <tbody id="arBody"></tbody>
       </table>
       <div class="empty" id="arEmpty"></div>
     </main>
   </div>
+</div>
+
+<!-- Satır menüsü (basılı tutunca) -->
+<div class="ctx-menu" id="rowMenu" hidden>
+  <button type="button" id="rowMenuDel">Kaydı Sil</button>
 </div>
 
 <!-- Not ekle / düzenle -->
@@ -151,6 +156,21 @@
   </div>
 </div>
 
+<!-- Arşiv kaydı (salt okunur) -->
+<div class="modal" id="arViewModal" hidden>
+  <div class="dialog note-dialog" role="dialog" aria-modal="true">
+    <h2>Arşiv Kaydı</h2>
+    <div class="row">
+      <div class="fld grow"><span>İlgili Kişi</span><div class="ro" id="avPerson"></div></div>
+      <div class="fld"><span>Alarm Tarihi / Saati</span><div class="ro" id="avDate"></div></div>
+    </div>
+    <div class="fld"><span>Notlar</span><div class="ro ro-notes" id="avNotes"></div></div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="avClose">Kapat</button>
+    </div>
+  </div>
+</div>
+
 <!-- Alarm uyarısı -->
 <div class="modal" id="alarmModal" hidden>
   <div class="dialog alarm-dialog" role="alertdialog" aria-modal="true">
@@ -159,16 +179,7 @@
     <div class="actions alarm-actions">
       <button type="button" class="btn danger" id="alarmDelNote">Notu Sil</button>
       <button type="button" class="btn warn" id="alarmDelAlarm">Alarmı Sil</button>
-      <button type="button" class="btn" id="alarmSnooze">Ertele</button>
-      <button type="button" class="btn primary" id="alarmOk">Tamam</button>
-    </div>
-    <div class="snooze-opts" id="snoozeOpts" hidden>
-      <span>Ertele:</span>
-      <button type="button" class="btn" data-min="5">5 dk</button>
-      <button type="button" class="btn" data-min="10">10 dk</button>
-      <button type="button" class="btn" data-min="15">15 dk</button>
-      <button type="button" class="btn" data-min="30">30 dk</button>
-      <button type="button" class="btn" data-min="60">1 saat</button>
+      <button type="button" class="btn primary" id="alarmOk">Devam</button>
     </div>
   </div>
 </div>
