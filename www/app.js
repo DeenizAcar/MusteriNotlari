@@ -639,6 +639,9 @@
   // ---------- Başlat ----------
   renderChips();
   renderTable();
+  // Açılışta kayıt varsa tablodaki ilk kayıt seçili gelsin
+  const firstRow = tbody.querySelector('tr[data-id]');
+  if (firstRow) selectNote(firstRow.dataset.id);
   loadAlarmPanel();
   checkAlarms();
   initNative();
