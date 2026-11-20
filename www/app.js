@@ -99,7 +99,8 @@
   // ---------- Tablo ----------
   const tbody = $('tbody');
   function sortedNotes() {
-    return notes.slice().sort((a, b) => (toMs(b.date, b.time) || 0) - (toMs(a.date, a.time) || 0) || (b.created || 0) - (a.created || 0));
+    // Kayıt zamanına göre: en yeni kayıt en üstte
+    return notes.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
   }
   function personLine(name, phone) {
     if (!name && !phone) return '';
