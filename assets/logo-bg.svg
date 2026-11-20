@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f78b8"/><stop offset="1" stop-color="#1a4470"/></linearGradient></defs>
-  <rect width="1024" height="1024" fill="url(#g)"/>
+  <rect width="1024" height="1024" fill="#fff4a3"/>
+  <line x1="0" y1="468" x2="1024" y2="468" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="526" x2="1024" y2="526" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="584" x2="1024" y2="584" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="642" x2="1024" y2="642" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="700" x2="1024" y2="700" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="758" x2="1024" y2="758" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="816" x2="1024" y2="816" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="874" x2="1024" y2="874" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="932" x2="1024" y2="932" stroke="#8fbbe0" stroke-width="6"/><line x1="0" y1="990" x2="1024" y2="990" stroke="#8fbbe0" stroke-width="6"/>
+  <line x1="250" y1="400" x2="250" y2="1024" stroke="#e98080" stroke-width="6"/>
+  <rect width="1024" height="402" fill="#7a3d1e"/>
+  <rect y="392" width="1024" height="16" fill="#5a2a12"/>
 </svg>
