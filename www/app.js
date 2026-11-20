@@ -392,7 +392,8 @@
   function loadAlarmPanel() {
     const n = selectedId ? byId(selectedId) : null;
     A.on.disabled = !n;
-    $('alarmFor').textContent = n ? `Seçili: ${personLabel(n)}` : 'Alarm için tablodan bir not seçin';
+    $('alarmFor').textContent = n ? personLabel(n) : 'Alarm için tablodan bir not seçin';
+    $('alarmFor').classList.toggle('has', !!n);
     const a = n && n.alarm && n.alarm.enabled ? n.alarm : null;
     A.on.checked = !!a;
     A.sd.value = a ? a.startDate || '' : '';
