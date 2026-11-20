@@ -32,64 +32,86 @@
 
   let selectedId = null;
 
+  // ---------- Arşiv (çalan alarmların kaydı) ----------
+  const ARCHIVE_KEY = 'musteriNotlari.arsiv.v1';
+  let archive = [];
+  try { archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]'); } catch (e) { archive = []; }
+  if (!Array.isArray(archive)) archive = [];
+  function saveArchive() {
+    try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive)); } catch (e) { /* yer yok */ }
+  }
+  // İlgili kişi boşsa diğer kişi
+  function personPair(n) {
+    if (n.name || n.phone) return { name: n.name || '', phone: n.phone || '' };
+    return { name: n.name2 || '', phone: n.phone2 || '' };
+  }
+  function addArchive(n, at) {
+    const p = personPair(n);
+    archive.push({ id: newId(), at, noteId: n.id, name: p.name, phone: p.phone, notes: n.notes || '' });
+  }
+
   // ---------- Arama ----------
-  const chipsEl = $('chips'), searchInput = $('searchInput'), clearBtn = $('clearSearch');
-  let chips = [];
-
-  function addChipsFrom(text) {
-    const words = text.split(/\s+/).filter(Boolean);
-    if (!words.length) return false;
-    chips.push(...words);
-    return true;
-  }
-  function renderChips() {
-    chipsEl.innerHTML = chips.map((w, i) =>
-      `<span class="chip"><span>${esc(w)}</span><button type="button" class="x-black" data-i="${i}" title="Sil" aria-label="${esc(w)} sil">&times;</button></span>`).join('');
-    clearBtn.hidden = !chips.length && !searchInput.value;
-  }
-  searchInput.addEventListener('input', () => {
-    const v = searchInput.value;
-    if (/\s/.test(v)) {
-      const parts = v.split(/\s+/);
-      const rest = /\s$/.test(v) ? '' : parts.pop();
-      addChipsFrom(parts.join(' '));
-      searchInput.value = rest;
-      renderChips();
+  // Kelime kelime arama kutusu (ana ekran ve arşivde ortak)
+  function createChipSearch(box, chipsEl, input, clearBtn, onChange) {
+    let chips = [];
+    function addChipsFrom(text) {
+      const words = text.split(/\s+/).filter(Boolean);
+      if (!words.length) return false;
+      chips.push(...words);
+      return true;
     }
-    clearBtn.hidden = !chips.length && !searchInput.value;
-    renderTable();
-  });
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (addChipsFrom(searchInput.value)) { searchInput.value = ''; renderChips(); renderTable(); }
-      searchInput.blur();
-    } else if (e.key === 'Backspace' && !searchInput.value && chips.length) {
-      chips.pop(); renderChips(); renderTable();
+    function render() {
+      chipsEl.innerHTML = chips.map((w, i) =>
+        `<span class="chip"><span>${esc(w)}</span><button type="button" class="x-black" data-i="${i}" title="Sil" aria-label="${esc(w)} sil">&times;</button></span>`).join('');
+      clearBtn.hidden = !chips.length && !input.value;
     }
-  });
-  searchInput.addEventListener('blur', () => {
-    if (addChipsFrom(searchInput.value)) { searchInput.value = ''; renderChips(); renderTable(); }
-  });
-  chipsEl.addEventListener('mousedown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
-  chipsEl.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-i]');
-    if (!b) return;
-    e.stopPropagation();
-    chips.splice(Number(b.dataset.i), 1);
-    renderChips(); renderTable();
-  });
-  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
-  clearBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    chips = []; searchInput.value = '';
-    renderChips(); renderTable();
-  });
-  $('searchBox').addEventListener('click', (e) => { if (e.target === e.currentTarget) searchInput.focus(); });
-
-  function searchTerms() {
-    return chips.concat(searchInput.value.split(/\s+/)).map(lower).filter(Boolean);
+    input.addEventListener('input', () => {
+      const v = input.value;
+      if (/\s/.test(v)) {
+        const parts = v.split(/\s+/);
+        const rest = /\s$/.test(v) ? '' : parts.pop();
+        addChipsFrom(parts.join(' '));
+        input.value = rest;
+        render();
+      }
+      clearBtn.hidden = !chips.length && !input.value;
+      onChange();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (addChipsFrom(input.value)) { input.value = ''; render(); onChange(); }
+        input.blur();
+      } else if (e.key === 'Backspace' && !input.value && chips.length) {
+        chips.pop(); render(); onChange();
+      }
+    });
+    input.addEventListener('blur', () => {
+      if (addChipsFrom(input.value)) { input.value = ''; render(); onChange(); }
+    });
+    chipsEl.addEventListener('mousedown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
+    chipsEl.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-i]');
+      if (!b) return;
+      e.stopPropagation();
+      chips.splice(Number(b.dataset.i), 1);
+      render(); onChange();
+    });
+    clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      chips = []; input.value = '';
+      render(); onChange();
+    });
+    box.addEventListener('click', (e) => { if (e.target === e.currentTarget) input.focus(); });
+    render();
+    return {
+      terms: () => chips.concat(input.value.split(/\s+/)).map(lower).filter(Boolean),
+      clear: () => { chips = []; input.value = ''; render(); },
+    };
   }
+  const mainSearch = createChipSearch($('searchBox'), $('chips'), $('searchInput'), $('clearSearch'), () => renderTable());
+  const searchTerms = () => mainSearch.terms();
   function haystack(n) {
     // Alarm bilgileri bilinçli olarak aramaya dahil edilmez.
     const phones = [n.phone, n.phone2].map((p) => String(p || '').replace(/\D/g, '')).join(' ');
@@ -594,10 +616,13 @@ Alarm silinecek. Emin misiniz?`))) return;
     for (const n of notes) {
       const a = n.alarm;
       if (!a || !a.enabled) continue;
-      const due = occurrences(a, a.lastFired || 0, 1);
-      if (due.length && due[0] <= now) {
+      const due = occurrences(a, a.lastFired || 0, 200).filter((t) => t <= now);
+      if (due.length) {
         a.lastFired = now;
         changed = true;
+        // Arşive kayıt: telefonda kaçırılanlar bildirim olarak çaldığı için hepsi,
+        // web'de yalnızca ekranda gösterilen son alarm
+        (N ? due : due.slice(-1)).forEach((t) => addArchive(n, t));
         if (!N) {
           beep();
           showAlarm(n);
@@ -607,10 +632,67 @@ Alarm silinecek. Emin misiniz?`))) return;
         }
       }
     }
-    if (changed) save();
+    if (changed) { save(); saveArchive(); if (!$('archiveView').hidden) renderArchive(); }
     updateNextInfo();
   }
   setInterval(checkAlarms, 10000);
+
+  // ---------- Arşiv ekranı ----------
+  const arBody = $('arBody');
+  let arFilteredIds = [];
+  const arSearch = createChipSearch($('arSearchBox'), $('arChips'), $('arSearchInput'), $('arClear'), () => renderArchive());
+  const fmtDateTime = (ms) => { const d = new Date(ms); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${nowTime(d)}`; };
+  const archiveLabel = (r) => [r.name, r.phone].filter(Boolean).join(' - ') || '(isimsiz)';
+  function renderArchive() {
+    const terms = arSearch.terms();
+    const rows = archive.slice().sort((a, b) => b.at - a.at).filter((r) => {
+      if (!terms.length) return true;
+      const h = lower([r.name, r.phone, String(r.phone || '').replace(/\D/g, ''), fmtDateTime(r.at), r.notes].join(' \u0001 '));
+      return terms.some((t) => h.includes(t)); // her kelimeye uyan kayıt ayrı ayrı bulunur
+    });
+    arFilteredIds = rows.map((r) => r.id);
+    $('arDelFiltered').disabled = !rows.length;
+    arBody.innerHTML = rows.map((r) => {
+      const [d, t] = fmtDateTime(r.at).split(' ');
+      return `
+      <tr data-id="${r.id}">
+        <td><div class="p-cell">${personLine(r.name, r.phone) || '<span class="p-name">(isimsiz)</span>'}</div></td>
+        <td class="d"><span class="d-date">${d}</span> <span class="d-time">${t}</span></td>
+        <td><div class="n-text">${esc(r.notes || '')}</div></td>
+        <td><button type="button" class="del" title="Sil" aria-label="Sil">&times;</button></td>
+      </tr>`;
+    }).join('');
+    $('arCount').textContent = archive.length ? `(${rows.length}/${archive.length})` : '';
+    const empty = $('arEmpty');
+    empty.hidden = rows.length > 0;
+    empty.textContent = archive.length ? 'Aramaya uyan arşiv kaydı bulunamadı.' : 'Arşiv boş. Çalan alarmlar burada listelenir.';
+  }
+  arBody.addEventListener('click', async (e) => {
+    if (e.target.closest('a.p-tel')) return;
+    const b = e.target.closest('button.del');
+    if (!b) return;
+    const id = b.closest('tr').dataset.id;
+    const r = archive.find((x) => x.id === id);
+    if (!r) return;
+    if (!(await confirmBox(`${archiveLabel(r)}\n${fmtDateTime(r.at)}\n\nArşiv kaydı silinsin mi?`))) return;
+    archive = archive.filter((x) => x.id !== id);
+    saveArchive(); renderArchive();
+  });
+  // Filtreye uyan (ekranda listelenen) arşiv kayıtlarını sil
+  $('arDelFiltered').addEventListener('click', async () => {
+    if (!arFilteredIds.length) return;
+    const msg = arSearch.terms().length
+      ? 'Filtrelenen arşiv kayıtlarını silmek istiyor musunuz?'
+      : 'Tüm arşiv kayıtlarını silmek istiyor musunuz?';
+    if (!(await confirmBox(msg))) return;
+    const del = new Set(arFilteredIds);
+    archive = archive.filter((x) => !del.has(x.id));
+    saveArchive(); renderArchive();
+  });
+  function openArchive() { renderArchive(); $('archiveView').hidden = false; }
+  function closeArchive() { $('archiveView').hidden = true; }
+  $('archiveBtn').addEventListener('click', openArchive);
+  $('arClose').addEventListener('click', closeArchive);
 
   // ---------- Android bildirim planlama ----------
   let schedTimer = null;
@@ -692,6 +774,7 @@ Alarm silinecek. Emin misiniz?`))) return;
     if (!$('clockModal').hidden) { closeClock(false); return; }
     if (!$('alarmModal').hidden) { closeAlarmPopup(); return; }
     if (!$('noteModal').hidden) { cancelNote(); return; }
+    if (!$('archiveView').hidden) { closeArchive(); return; }
     if (exiting) return;
     exiting = true;
     const ok = await confirmBox('Uygulamadan çıkmak istediğinize emin misiniz?');
@@ -709,10 +792,10 @@ Alarm silinecek. Emin misiniz?`))) return;
     else if (!$('clockModal').hidden) closeClock(false);
     else if (!$('alarmModal').hidden) closeAlarmPopup();
     else if (!$('noteModal').hidden) cancelNote();
+    else if (!$('archiveView').hidden) closeArchive();
   });
 
   // ---------- Başlat ----------
-  renderChips();
   renderTable();
   // Açılışta kayıt varsa tablodaki ilk kayıt seçili gelsin
   const firstRow = tbody.querySelector('tr[data-id]');

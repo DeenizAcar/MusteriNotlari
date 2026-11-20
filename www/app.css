@@ -214,3 +214,16 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
 .snooze-opts .btn { padding: 6px 10px; }
 /* Kişiler hücresi en fazla 5 satır */
 .p-cell { max-height: calc(5 * 1.35em + 3px); overflow: hidden; }
+
+/* Arşiv ekranı */
+.screen { position: fixed; inset: 0; z-index: 5; background: var(--bg); }
+.screen[hidden] { display: none; }
+.screen-title { font-weight: 700; color: #3b4656; padding: 0 2px; }
+.screen-title span { font-weight: 400; color: var(--muted); font-size: 13px; }
+.c-aperson { width: 32%; }
+.c-adate { width: 120px; }
+@media (max-width: 640px) {
+  .c-aperson { width: 34%; }
+  .c-adate { width: 84px; }
+}
+.btn.danger:disabled { opacity: .45; }

@@ -18,6 +18,7 @@
       <button type="button" class="x-black x-clear" id="clearSearch" title="Aramayı temizle" aria-label="Aramayı temizle">&times;</button>
     </div>
     <button type="button" class="btn primary" id="addBtn">Not Ekle</button>
+    <button type="button" class="btn" id="archiveBtn">Arşiv</button>
   </header>
 
   <div class="sortbar" role="radiogroup" aria-label="Sıralama">
@@ -74,6 +75,31 @@
     </div>
   </section>
   <a class="apk-link" id="apkLink" href="apk/">Android uygulamasını indir (APK)</a>
+</div>
+
+<!-- Arşiv ekranı -->
+<div class="screen" id="archiveView" hidden>
+  <div class="app">
+    <header class="topbar">
+      <div class="search" id="arSearchBox">
+        <div class="chips" id="arChips"></div>
+        <input id="arSearchInput" type="search" autocomplete="off" placeholder="Arşivde ara..." enterkeyhint="search">
+        <button type="button" class="x-black x-clear" id="arClear" title="Aramayı temizle" aria-label="Aramayı temizle">&times;</button>
+      </div>
+      <button type="button" class="btn danger" id="arDelFiltered">Sil</button>
+      <button type="button" class="btn" id="arClose">Kapat</button>
+    </header>
+    <div class="screen-title">Arşiv <span id="arCount"></span></div>
+    <main class="table-wrap">
+      <table class="notes">
+        <thead>
+          <tr><th class="c-aperson">İlgili Kişi</th><th class="c-adate">Alarm Tarihi / Saati</th><th class="c-notes">Notlar</th><th class="c-del"></th></tr>
+        </thead>
+        <tbody id="arBody"></tbody>
+      </table>
+      <div class="empty" id="arEmpty"></div>
+    </main>
+  </div>
 </div>
 
 <!-- Not ekle / düzenle -->
