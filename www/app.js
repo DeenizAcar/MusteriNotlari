@@ -359,7 +359,7 @@
     renderTable(); loadAlarmPanel(); scheduleNative();
   });
   async function cancelNote() {
-    if (await confirmBox('Yapılan değişiklikler kaydedilmeyecek. Vazgeçmek istediğinize emin misiniz?')) {
+    if (await confirmBox('Vazgeçmek istediğinize emin misiniz?')) {
       $('noteModal').hidden = true;
     }
   }

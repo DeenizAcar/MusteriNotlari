@@ -85,7 +85,7 @@ table.notes { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .notes tbody tr:hover { background: var(--hover); }
 .notes tbody tr.sel { background: var(--sel); }
 .c-date { width: 118px; }
-.c-person { width: 38%; }
+.c-person { width: 28%; }
 .c-del { width: 38px; }
 .d-date { white-space: nowrap; }
 .d-time { color: var(--muted); }
@@ -187,7 +187,7 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
   .app { padding-left: 6px; padding-right: 6px; gap: 6px; }
   .btn { padding: 8px 10px; }
   .c-date { width: 82px; }
-  .c-person { width: 42%; }
+  .c-person { width: 33%; }
   .c-del { width: 30px; }
   .notes td, .notes th { padding: 6px 5px; }
   .d-time { display: block; }
