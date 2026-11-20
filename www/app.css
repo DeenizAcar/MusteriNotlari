@@ -133,7 +133,9 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
 }
 .timebtn[data-empty="1"] { color: var(--muted); }
 
-.apk-link { text-align: center; font-size: 13px; color: var(--primary); }
+.footer { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; }
+.link-btn { border: 0; background: transparent; color: var(--primary); text-decoration: underline; cursor: pointer; padding: 2px 0; font-size: 13px; }
+.apk-link { font-size: 13px; color: var(--primary); }
 .native .apk-link { display: none; }
 
 /* Modallar */

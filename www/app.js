@@ -775,6 +775,75 @@ Alarm silinecek. Emin misiniz?`))) return;
   $('archiveBtn').addEventListener('click', openArchive);
   $('arClose').addEventListener('click', closeArchive);
 
+  // ---------- Yedekle / Geri Yükle ----------
+  function backupFileName() {
+    const d = new Date();
+    return `MusteriNotlari-yedek-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+  }
+  async function doBackup() {
+    const data = JSON.stringify({ app: 'MusteriNotlari', version: 1, createdAt: new Date().toISOString(), notes, archive }, null, 1);
+    const name = backupFileName();
+    const summary = `${notes.length} not, ${archive.length} arşiv kaydı`;
+    if (!N) {
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      return;
+    }
+    const FS = N.Filesystem;
+    let savedUri = null;
+    try {
+      // Önce telefonun Belgeler klasörüne kaydet
+      const res = await FS.writeFile({ path: `MusteriNotlari/${name}`, data, directory: N.Directory.Documents, encoding: N.Encoding.UTF8, recursive: true });
+      savedUri = res.uri;
+    } catch (e) { savedUri = null; }
+    let shareUri = savedUri;
+    if (savedUri) {
+      if (!(await confirmBox(`Yedek alındı (${summary}).\n\nKonum: Belgeler/MusteriNotlari/${name}\n\nYedeği ayrıca paylaşmak (WhatsApp, Drive, e-posta...) ister misiniz?`, 'Paylaş', 'Kapat'))) return;
+    } else {
+      try {
+        const res = await FS.writeFile({ path: name, data, directory: N.Directory.Cache, encoding: N.Encoding.UTF8 });
+        shareUri = res.uri;
+      } catch (e) {
+        confirmBox('Yedek dosyası oluşturulamadı.', 'Tamam', 'Kapat');
+        return;
+      }
+    }
+    try {
+      await N.Share.share({ title: 'Müşteri Notları yedeği', text: `Müşteri Notları yedeği (${summary})`, files: [shareUri], dialogTitle: 'Yedeği paylaş' });
+    } catch (e) { /* paylaşım iptal edildi */ }
+  }
+  $('backupBtn').addEventListener('click', doBackup);
+
+  $('restoreBtn').addEventListener('click', () => { $('restoreFile').value = ''; $('restoreFile').click(); });
+  $('restoreFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    let obj;
+    try { obj = JSON.parse(await file.text()); } catch (err) { obj = null; }
+    if (!obj || obj.app !== 'MusteriNotlari' || !Array.isArray(obj.notes)) {
+      confirmBox('Seçilen dosya geçerli bir Müşteri Notları yedeği değil.', 'Tamam', 'Kapat');
+      return;
+    }
+    const newArchive = Array.isArray(obj.archive) ? obj.archive : [];
+    const msg = `Yedekteki ${obj.notes.length} not ve ${newArchive.length} arşiv kaydı geri yüklenecek.\n\nMevcut ${notes.length} not ve ${archive.length} arşiv kaydı silinip yerine bunlar gelecek. Emin misiniz?`;
+    if (!(await confirmBox(msg))) return;
+    notes = obj.notes;
+    archive = newArchive;
+    // Geri yüklenen alarmların geçmiş zamanları tekrar çalmasın
+    const now = Date.now();
+    notes.forEach((n) => { if (n.alarm && n.alarm.enabled) n.alarm.lastFired = Math.max(n.alarm.lastFired || 0, now); });
+    save(); saveArchive();
+    selectedId = null;
+    renderTable();
+    const first = tbody.querySelector('tr[data-id]');
+    if (first) selectNote(first.dataset.id); else loadAlarmPanel();
+    scheduleNative();
+    confirmBox('Yedek geri yüklendi.', 'Tamam', 'Kapat');
+  });
+
   // ---------- Android bildirim planlama ----------
   let schedTimer = null;
   function scheduleNative() {
