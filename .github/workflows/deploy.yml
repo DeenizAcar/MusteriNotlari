@@ -1,0 +1,93 @@
+name: APK derle ve GitHub Pages'e yayınla
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Native köprüyü derle
+        run: npm run build:native
+
+      - name: Android projesini oluştur
+        run: |
+          npx cap add android
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n</manifest>#' "$MANIFEST"
+          # Sürüm numarası: her derlemede artar (güncelleme kurulabilsin)
+          sed -i "s/versionCode 1$/versionCode ${GITHUB_RUN_NUMBER}/" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+          npx cap sync android
+
+      - name: İmza anahtarı
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          else
+            echo "::warning::ANDROID_KEYSTORE_B64 secret tanımlı değil; geçici anahtar kullanılıyor (güncellemeler eski sürümün üzerine kurulamaz)."
+          fi
+
+      - name: APK derle
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Site klasörünü hazırla
+        run: |
+          mkdir -p site/apk
+          cp -r www/* site/
+          cp android/app/build/outputs/apk/debug/app-debug.apk site/apk/MusteriNotlari.apk
+          cp pages/apk-index.html site/apk/index.html
+          touch site/.nojekyll
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MusteriNotlari-apk
+          path: site/apk/MusteriNotlari.apk
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

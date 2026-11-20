@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4e79">
+<title>Müşteri Notları</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="search" id="searchBox">
+      <div class="chips" id="chips"></div>
+      <input id="searchInput" type="search" autocomplete="off" placeholder="Ara..." enterkeyhint="search">
+      <button type="button" class="x-black x-clear" id="clearSearch" title="Aramayı temizle" aria-label="Aramayı temizle">&times;</button>
+    </div>
+    <button type="button" class="btn primary" id="addBtn">Not Ekle</button>
+  </header>
+
+  <main class="table-wrap" id="tableWrap">
+    <table class="notes">
+      <thead>
+        <tr><th class="c-date">Tarih / Saat</th><th class="c-person">Kişiler</th><th class="c-notes">Notlar</th><th class="c-del"></th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty">Henüz not yok. “Not Ekle” ile başlayın.</div>
+  </main>
+
+  <section class="alarm-panel" id="alarmPanel">
+    <div class="alarm-head">
+      <label class="alarm-check"><input type="checkbox" id="alarmOn"> Alarm kur</label>
+      <span class="alarm-for" id="alarmFor">Alarm için tablodan bir not seçin</span>
+    </div>
+    <div class="alarm-fields">
+      <div class="af"><span>Başlangıç</span><input type="date" id="aStartDate"><button type="button" class="timebtn" id="aStartTime" data-empty="1">--:--</button></div>
+      <div class="af"><span>Bitiş</span><input type="date" id="aEndDate"><button type="button" class="timebtn" id="aEndTime" data-empty="1">--:--</button></div>
+      <div class="af"><span>Hatırlatma</span>
+        <select id="aPeriod">
+          <option value="0">Tekrar yok</option>
+          <option value="5">5 dakika</option>
+          <option value="10">10 dakika</option>
+          <option value="15">15 dakika</option>
+          <option value="30">30 dakika</option>
+          <option value="60">1 saat</option>
+          <option value="120">2 saat</option>
+          <option value="180">3 saat</option>
+          <option value="240">4 saat</option>
+          <option value="300">5 saat</option>
+          <option value="360">6 saat</option>
+          <option value="480">8 saat</option>
+          <option value="720">12 saat</option>
+          <option value="1440">1 gün</option>
+          <option value="2880">2 gün</option>
+          <option value="4320">3 gün</option>
+          <option value="5760">4 gün</option>
+          <option value="7200">5 gün</option>
+          <option value="8640">6 gün</option>
+          <option value="10080">1 hafta</option>
+          <option value="20160">2 hafta</option>
+          <option value="1M">1 ay</option>
+        </select>
+      </div>
+    </div>
+  </section>
+  <a class="apk-link" id="apkLink" href="apk/">Android uygulamasını indir (APK)</a>
+</div>
+
+<!-- Not ekle / düzenle -->
+<div class="modal" id="noteModal" hidden>
+  <div class="dialog note-dialog" role="dialog" aria-modal="true">
+    <h2 id="noteTitle">Not Ekle</h2>
+    <div class="row">
+      <label class="fld"><span>Tarih</span><input type="date" id="fDate"></label>
+      <label class="fld"><span>Saat</span><button type="button" class="timebtn" id="fTime">--:--</button></label>
+    </div>
+    <div class="row">
+      <label class="fld grow"><span>Kişi adı soyadı</span><input type="text" id="fName" autocomplete="off"></label>
+      <label class="fld"><span>Telefon</span><input type="tel" id="fPhone" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <label class="fld grow"><span>Diğer kişi adı soyadı</span><input type="text" id="fName2" autocomplete="off"></label>
+      <label class="fld"><span>Diğer kişi telefonu</span><input type="tel" id="fPhone2" autocomplete="off"></label>
+    </div>
+    <label class="fld"><span>Notlar</span><textarea id="fNotes" rows="5"></textarea></label>
+    <div class="actions">
+      <button type="button" class="btn primary" id="saveBtn">Kaydet</button>
+      <button type="button" class="btn" id="cancelBtn">Vazgeç</button>
+    </div>
+  </div>
+</div>
+
+<!-- Saat seçici -->
+<div class="modal" id="clockModal" hidden>
+  <div class="dialog clock-dialog" role="dialog" aria-modal="true">
+    <div class="clock-head">
+      <button type="button" id="ckH" class="on">00</button><span>:</span><button type="button" id="ckM">00</button>
+    </div>
+    <svg id="clockFace" viewBox="0 0 260 260" width="260" height="260"></svg>
+    <div class="actions">
+      <button type="button" class="btn primary" id="ckOk">Tamam</button>
+      <button type="button" class="btn" id="ckCancel">İptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onay -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="dialog confirm-dialog" role="alertdialog" aria-modal="true">
+    <div class="confirm-text" id="confirmText"></div>
+    <div class="actions">
+      <button type="button" class="btn danger" id="confirmYes">Evet</button>
+      <button type="button" class="btn" id="confirmNo">Hayır</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alarm uyarısı -->
+<div class="modal" id="alarmModal" hidden>
+  <div class="dialog alarm-dialog" role="alertdialog" aria-modal="true">
+    <h2>⏰ Hatırlatma</h2>
+    <div id="alarmText"></div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="alarmOk">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<script src="native.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
