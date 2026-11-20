@@ -67,6 +67,8 @@ jobs:
         run: |
           mkdir -p site/apk
           cp -r www/* site/
+          # Tarayıcı önbelleği eski dosyayı göstermesin
+          sed -i "s/\(app\.css\|app\.js\|native\.js\)\"/\1?v=${GITHUB_RUN_NUMBER}\"/g" site/index.html
           cp android/app/build/outputs/apk/debug/app-debug.apk site/apk/MusteriNotlari.apk
           cp pages/apk-index.html site/apk/index.html
           touch site/.nojekyll
