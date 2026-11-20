@@ -373,6 +373,22 @@
     [A.sd, A.st, A.ed, A.et, A.per].forEach((x) => { x.disabled = !en; });
     panel.classList.toggle('disabled', !en);
   }
+  // Seçili notun güncel duruma göre ilk hatırlatma zamanı
+  function updateNextInfo() {
+    const el = $('aNext');
+    const n = selectedId ? byId(selectedId) : null;
+    const a = n && n.alarm && n.alarm.enabled ? n.alarm : null;
+    if (!a) { el.textContent = ''; el.classList.remove('none'); return; }
+    const t = occurrences(a, Math.max(Date.now(), a.lastFired || 0), 1)[0];
+    if (t) {
+      const d = new Date(t);
+      el.textContent = `İlk hatırlatma: ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${nowTime(d)}`;
+      el.classList.remove('none');
+    } else {
+      el.textContent = 'Bekleyen hatırlatma yok';
+      el.classList.add('none');
+    }
+  }
   function loadAlarmPanel() {
     const n = selectedId ? byId(selectedId) : null;
     A.on.disabled = !n;
@@ -385,6 +401,7 @@
     setTimeBtn(A.et, a ? a.endTime : '');
     A.per.value = a ? String(a.period || '0') : '0';
     setAlarmFieldsEnabled(!!a);
+    updateNextInfo();
   }
   function storeAlarm() {
     const n = selectedId ? byId(selectedId) : null;
@@ -402,7 +419,7 @@
         lastFired: Date.now(), // bu andan önceki tekrarlar çalmaz
       };
     }
-    save(); renderTable(); scheduleNative();
+    save(); renderTable(); scheduleNative(); updateNextInfo();
   }
   A.on.addEventListener('change', () => {
     if (A.on.checked) {
@@ -534,6 +551,7 @@
       }
     }
     if (changed) save();
+    updateNextInfo();
   }
   setInterval(checkAlarms, 10000);
 

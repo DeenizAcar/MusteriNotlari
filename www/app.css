@@ -194,3 +194,6 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
   .af > span { min-width: 0; }
   .alarm-fields { gap: 6px 12px; }
 }
+
+.af > .a-next { min-width: 0; color: #1b8a3a; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.af > .a-next.none { color: var(--muted); font-weight: 400; }
