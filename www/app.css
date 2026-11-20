@@ -143,11 +143,21 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
   max-height: 100%; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,.25);
 }
 .dialog h2 { margin: 0 0 12px; font-size: 18px; }
-.row { display: flex; gap: 10px; flex-wrap: wrap; }
-.fld { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; min-width: 0; }
-.fld.grow { flex: 1 1 200px; }
-.row > .fld:not(.grow) { flex: 0 1 170px; }
-.fld > span { font-size: 13px; color: var(--muted); }
+.row { display: flex; gap: 8px; flex-wrap: nowrap; }
+.fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; min-width: 0; }
+.fld.grow { flex: 1 1 0; }
+.row > .fld:not(.grow) { flex: 0 0 38%; }
+.fld > span {
+  font-size: 13px; color: #3b4656; background: #eceff3;
+  border-radius: 4px; padding: 2px 6px; align-self: stretch;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-dialog { padding-top: 0; }
+.note-dialog h2 {
+  background: #fff4c2; text-align: center;
+  margin: 0 -16px 14px; padding: 12px 16px;
+  border-bottom: 1px solid #f0e2a0; border-radius: 12px 12px 0 0;
+}
 .fld input, .fld textarea {
   border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; background: #fff; width: 100%;
 }
