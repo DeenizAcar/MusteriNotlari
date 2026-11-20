@@ -478,6 +478,16 @@
   }
   // fromMs'ten büyük (hariç) tüm alarm zamanları, en fazla `limit` adet
   function occurrences(a, fromMs, limit) {
+    const out = periodicOccurrences(a, fromMs, limit);
+    // Ertelenmiş alarm varsa listeye eklenir
+    if (a && a.enabled && a.snoozeAt && a.snoozeAt > fromMs) {
+      out.push(a.snoozeAt);
+      out.sort((x, y) => x - y);
+      if (out.length > limit) out.length = limit;
+    }
+    return out;
+  }
+  function periodicOccurrences(a, fromMs, limit) {
     const out = [];
     if (!a || !a.enabled) return out;
     const start = toMs(a.startDate, a.startTime);
@@ -522,14 +532,61 @@
   document.addEventListener('pointerdown', () => { try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) { /* */ } }, { passive: true });
 
   function showAlarm(n) {
+    alarmNoteId = n.id;
     $('alarmTitle').textContent = personLabel(n);
     $('alarmText').textContent = n.notes || '';
+    $('snoozeOpts').hidden = true;
     $('alarmModal').hidden = false;
     selectNote(n.id);
     const tr = tbody.querySelector(`tr[data-id="${CSS.escape(n.id)}"]`);
     if (tr) tr.scrollIntoView({ block: 'nearest' });
   }
-  $('alarmOk').addEventListener('click', () => { $('alarmModal').hidden = true; });
+  let alarmNoteId = null;
+  function closeAlarmPopup() { $('alarmModal').hidden = true; $('snoozeOpts').hidden = true; alarmNoteId = null; }
+  $('alarmOk').addEventListener('click', closeAlarmPopup);
+
+  // Notu sil: not alarmıyla birlikte silinir
+  $('alarmDelNote').addEventListener('click', async () => {
+    const n = byId(alarmNoteId);
+    if (!n) { closeAlarmPopup(); return; }
+    if (!(await confirmBox(`${personLabel(n)}
+
+Not tamamen silinecek. Emin misiniz?`))) return;
+    notes = notes.filter((x) => x.id !== n.id);
+    if (selectedId === n.id) {
+      selectedId = null;
+      renderTable();
+      const first = tbody.querySelector('tr[data-id]');
+      if (first) selectedId = first.dataset.id;
+    }
+    save(); renderTable(); loadAlarmPanel(); scheduleNative();
+    closeAlarmPopup();
+  });
+
+  // Alarmı sil: alarm bilgileri silinir, Alarm kur tiki boşalır
+  $('alarmDelAlarm').addEventListener('click', async () => {
+    const n = byId(alarmNoteId);
+    if (!n) { closeAlarmPopup(); return; }
+    if (!(await confirmBox(`${personLabel(n)}
+
+Alarm silinecek. Emin misiniz?`))) return;
+    n.alarm = null;
+    save(); renderTable(); loadAlarmPanel(); scheduleNative();
+    closeAlarmPopup();
+  });
+
+  // Ertele
+  $('alarmSnooze').addEventListener('click', () => { $('snoozeOpts').hidden = !$('snoozeOpts').hidden; });
+  $('snoozeOpts').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-min]');
+    if (!b) return;
+    const n = byId(alarmNoteId);
+    if (n && n.alarm && n.alarm.enabled) {
+      n.alarm.snoozeAt = Date.now() + Number(b.dataset.min) * 60000;
+      save(); scheduleNative(); updateNextInfo();
+    }
+    closeAlarmPopup();
+  });
 
   function checkAlarms() {
     const now = Date.now();
@@ -633,7 +690,7 @@
   async function handleBack() {
     if (!$('confirmModal').hidden) { closeConfirm(false); return; }
     if (!$('clockModal').hidden) { closeClock(false); return; }
-    if (!$('alarmModal').hidden) { $('alarmModal').hidden = true; return; }
+    if (!$('alarmModal').hidden) { closeAlarmPopup(); return; }
     if (!$('noteModal').hidden) { cancelNote(); return; }
     if (exiting) return;
     exiting = true;
@@ -650,7 +707,7 @@
     if (e.key !== 'Escape') return;
     if (!$('confirmModal').hidden) closeConfirm(false);
     else if (!$('clockModal').hidden) closeClock(false);
-    else if (!$('alarmModal').hidden) $('alarmModal').hidden = true;
+    else if (!$('alarmModal').hidden) closeAlarmPopup();
     else if (!$('noteModal').hidden) cancelNote();
   });
 

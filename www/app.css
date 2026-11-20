@@ -136,7 +136,8 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
   display: flex; align-items: center; justify-content: center; padding: 12px;
 }
 .modal[hidden] { display: none; }
-#clockModal, #confirmModal { z-index: 20; }
+#clockModal { z-index: 20; }
+#confirmModal { z-index: 40; }
 #alarmModal { z-index: 30; }
 .dialog {
   background: #fff; border-radius: 12px; padding: 16px; width: 100%; max-width: 560px;
@@ -198,3 +199,10 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
 .af > .a-next { min-width: 0; color: #1b8a3a; font-weight: 600; font-size: 13px; white-space: nowrap; }
 .af > .a-next.none { color: var(--muted); font-weight: 400; }
 .alarm-for.has { color: #4a7fc1; font-weight: 700; font-size: 14px; }
+
+.btn.warn { background: #fff3e0; border-color: #f0a35a; color: #a14d00; }
+.alarm-actions { flex-wrap: wrap; }
+.snooze-opts { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.snooze-opts[hidden] { display: none; }
+.snooze-opts > span { color: var(--muted); font-size: 13px; }
+.snooze-opts .btn { padding: 6px 10px; }

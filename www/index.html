@@ -130,8 +130,19 @@
   <div class="dialog alarm-dialog" role="alertdialog" aria-modal="true">
     <h2 id="alarmTitle"></h2>
     <div id="alarmText"></div>
-    <div class="actions">
+    <div class="actions alarm-actions">
+      <button type="button" class="btn danger" id="alarmDelNote">Notu Sil</button>
+      <button type="button" class="btn warn" id="alarmDelAlarm">Alarmı Sil</button>
+      <button type="button" class="btn" id="alarmSnooze">Ertele</button>
       <button type="button" class="btn primary" id="alarmOk">Tamam</button>
+    </div>
+    <div class="snooze-opts" id="snoozeOpts" hidden>
+      <span>Ertele:</span>
+      <button type="button" class="btn" data-min="5">5 dk</button>
+      <button type="button" class="btn" data-min="10">10 dk</button>
+      <button type="button" class="btn" data-min="15">15 dk</button>
+      <button type="button" class="btn" data-min="30">30 dk</button>
+      <button type="button" class="btn" data-min="60">1 saat</button>
     </div>
   </div>
 </div>
