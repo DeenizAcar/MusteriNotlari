@@ -138,7 +138,7 @@
     tbody.innerHTML = rows.map((n) => `
       <tr data-id="${n.id}" class="${n.id === selectedId ? 'sel' : ''}">
         <td class="d"><span class="d-date">${esc(fmtDate(n.date))}</span> <span class="d-time">${esc(n.time || '')}${n.alarm && n.alarm.enabled ? '<span class="bell" title="Alarm var">🔔</span>' : ''}</span></td>
-        <td>${personLine(n.name, n.phone)}${personLine(n.name2, n.phone2)}</td>
+        <td><div class="p-cell">${personLine(n.name, n.phone)}${personLine(n.name2, n.phone2)}</div></td>
         <td><div class="n-text">${esc(n.notes || '')}</div></td>
         <td><button type="button" class="del" title="Sil" aria-label="Sil">&times;</button></td>
       </tr>`).join('');

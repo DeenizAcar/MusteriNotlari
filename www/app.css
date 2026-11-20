@@ -92,10 +92,16 @@ table.notes { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .bell { font-size: 12px; margin-left: 3px; }
 .p-line { display: flex; flex-wrap: wrap; column-gap: 8px; }
 .p-line + .p-line { margin-top: 3px; color: #3b4656; }
-.p-name { overflow-wrap: anywhere; }
+.p-name {
+  overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; word-break: break-all;
+}
 .p-tel { font-weight: 700; color: var(--primary); text-decoration: none; white-space: nowrap; }
 .p-tel:hover { text-decoration: underline; }
-.n-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.n-text {
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; overflow: hidden;
+}
 .del {
   border: 0; background: transparent; color: var(--danger);
   font-size: 22px; line-height: 1; font-weight: 700; cursor: pointer; padding: 0 4px;
@@ -109,7 +115,7 @@ table.notes { width: 100%; border-collapse: collapse; table-layout: fixed; }
   padding: 6px 10px 8px;
 }
 .alarm-head { display: flex; align-items: center; gap: 10px; min-height: 24px; }
-.alarm-check { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
+.alarm-check { flex-shrink: 0; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
 .alarm-check input { width: 18px; height: 18px; margin: 0; }
 .alarm-for { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .alarm-fields { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 5px; }
@@ -206,3 +212,5 @@ input:disabled, select:disabled, button:disabled { cursor: not-allowed; }
 .snooze-opts[hidden] { display: none; }
 .snooze-opts > span { color: var(--muted); font-size: 13px; }
 .snooze-opts .btn { padding: 6px 10px; }
+/* Kişiler hücresi en fazla 5 satır */
+.p-cell { max-height: calc(5 * 1.35em + 3px); overflow: hidden; }
