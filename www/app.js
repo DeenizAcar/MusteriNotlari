@@ -133,7 +133,7 @@
     const rows = sortedNotes().filter((n) => {
       if (!terms.length) return true;
       const h = haystack(n);
-      return terms.every((t) => h.includes(t));
+      return terms.some((t) => h.includes(t)); // herhangi bir kelimeye uyan kayıt listelenir
     });
     tbody.innerHTML = rows.map((n) => `
       <tr data-id="${n.id}" class="${n.id === selectedId ? 'sel' : ''}">
