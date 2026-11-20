@@ -98,9 +98,31 @@
 
   // ---------- Tablo ----------
   const tbody = $('tbody');
+  const SORT_KEY = 'musteriNotlari.sort';
+  let sortMode = 'created';
+  try { if (localStorage.getItem(SORT_KEY) === 'person') sortMode = 'person'; } catch (e) { /* */ }
+  document.querySelectorAll('input[name="sort"]').forEach((r) => {
+    r.checked = r.value === sortMode;
+    r.addEventListener('change', () => {
+      if (!r.checked) return;
+      sortMode = r.value;
+      try { localStorage.setItem(SORT_KEY, sortMode); } catch (e) { /* */ }
+      renderTable();
+    });
+  });
+  const collator = new Intl.Collator('tr-TR', { sensitivity: 'base', numeric: true });
+  // İlgili kişi adı soyadı + telefonu + diğer kişi adı soyadı + telefonu yan yana
+  const personKey = (n) => [n.name, n.phone, n.name2, n.phone2].map((x) => String(x || '').trim()).filter(Boolean).join(' ');
   function sortedNotes() {
-    // Kayıt zamanına göre: en yeni kayıt en üstte
-    return notes.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
+    const byCreated = (a, b) => (b.created || 0) - (a.created || 0); // en yeni kayıt en üstte
+    if (sortMode === 'person') {
+      return notes.slice().sort((a, b) => {
+        const ka = personKey(a), kb = personKey(b);
+        if (!ka !== !kb) return ka ? -1 : 1; // kişisi boş olanlar en sona
+        return collator.compare(ka, kb) || byCreated(a, b);
+      });
+    }
+    return notes.slice().sort(byCreated);
   }
   function personLine(name, phone) {
     if (!name && !phone) return '';

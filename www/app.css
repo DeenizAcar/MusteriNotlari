@@ -63,6 +63,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn.primary:hover { background: var(--primary-2); }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 
+/* Sıralama */
+.sortbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 14px; padding: 0 2px; margin-bottom: -2px; }
+.sortbar > span { color: var(--muted); font-size: 13px; }
+.sortbar label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.sortbar input { margin: 0; width: 16px; height: 16px; }
+
 /* Tablo */
 .table-wrap {
   flex: 1; min-height: 120px; overflow: auto;

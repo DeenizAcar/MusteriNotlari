@@ -18,6 +18,12 @@
     <button type="button" class="btn primary" id="addBtn">Not Ekle</button>
   </header>
 
+  <div class="sortbar" role="radiogroup" aria-label="Sıralama">
+    <span>Sıralama:</span>
+    <label><input type="radio" name="sort" value="created" checked> Kayıt tarihine göre</label>
+    <label><input type="radio" name="sort" value="person"> İlgili kişiye göre</label>
+  </div>
+
   <main class="table-wrap" id="tableWrap">
     <table class="notes">
       <thead>
