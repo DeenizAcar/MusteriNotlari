@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f4e79">
 <title>Müşteri Notları</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -126,7 +128,7 @@
 <!-- Alarm uyarısı -->
 <div class="modal" id="alarmModal" hidden>
   <div class="dialog alarm-dialog" role="alertdialog" aria-modal="true">
-    <h2>⏰ Hatırlatma</h2>
+    <h2 id="alarmTitle"></h2>
     <div id="alarmText"></div>
     <div class="actions">
       <button type="button" class="btn primary" id="alarmOk">Tamam</button>

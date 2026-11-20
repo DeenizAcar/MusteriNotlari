@@ -173,7 +173,9 @@
   }
 
   function personLabel(n) {
-    const parts = [n.name, n.phone].filter(Boolean);
+    // İlgili kişi bilgisi boşsa diğer kişinin bilgisi kullanılır
+    let parts = [n.name, n.phone].filter(Boolean);
+    if (!parts.length) parts = [n.name2, n.phone2].filter(Boolean);
     return parts.length ? parts.join(' - ') : '(isimsiz)';
   }
 
@@ -519,12 +521,9 @@
   }
   document.addEventListener('pointerdown', () => { try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) { /* */ } }, { passive: true });
 
-  function alarmMessage(n) {
-    return [personLabel(n), [n.name2, n.phone2].filter(Boolean).join(' - '), n.notes ? '\n' + n.notes : '']
-      .filter(Boolean).join('\n');
-  }
   function showAlarm(n) {
-    $('alarmText').textContent = alarmMessage(n);
+    $('alarmTitle').textContent = personLabel(n);
+    $('alarmText').textContent = n.notes || '';
     $('alarmModal').hidden = false;
     selectNote(n.id);
     const tr = tbody.querySelector(`tr[data-id="${CSS.escape(n.id)}"]`);
@@ -546,7 +545,7 @@
           beep();
           showAlarm(n);
           if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
-            try { new Notification('Hatırlatma: ' + personLabel(n), { body: n.notes || '', tag: n.id }); } catch (e) { /* */ }
+            try { new Notification(personLabel(n), { body: n.notes || '', tag: n.id }); } catch (e) { /* */ }
           }
         }
       }
@@ -580,9 +579,9 @@
           if (list.length >= 450) break;
           list.push({
             id: id++,
-            title: 'Hatırlatma: ' + personLabel(n),
-            body: [[n.name2, n.phone2].filter(Boolean).join(' - '), n.notes || ''].filter(Boolean).join('\n') || ' ',
-            largeBody: alarmMessage(n),
+            title: personLabel(n),
+            body: n.notes || ' ',
+            largeBody: n.notes || ' ',
             channelId: 'alarmlar',
             schedule: { at: new Date(t), allowWhileIdle: true },
             extra: { noteId: n.id },
