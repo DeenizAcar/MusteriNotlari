@@ -189,7 +189,7 @@
   window.addEventListener('resize', closeRowMenu);
   document.addEventListener('scroll', closeRowMenu, true);
 
-  function attachRowMenu(body, onDelete) {
+  function attachRowMenu(body, onDelete, onSelect) {
     let timer = null, start = null, row = null;
     const cancel = () => {
       clearTimeout(timer); timer = null;
@@ -208,6 +208,7 @@
         cancel();
         suppressClickUntil = Date.now() + 700;
         if (navigator.vibrate) { try { navigator.vibrate(30); } catch (err) { /* */ } }
+        onSelect(id); // önce kayda konumlan
         openRowMenu(start.x, start.y, () => onDelete(id));
       }, 550);
     });
@@ -223,12 +224,13 @@
       if (!rowMenu.hidden) return; // basılı tutma ile zaten açıldı
       cancel();
       const id = tr.dataset.id;
+      onSelect(id); // önce kayda konumlan
       openRowMenu(e.clientX, e.clientY, () => onDelete(id));
     });
   }
 
   let lastTap = { id: null, t: 0 };
-  attachRowMenu(tbody, (id) => deleteNote(id));
+  attachRowMenu(tbody, (id) => deleteNote(id), (id) => selectNote(id));
   tbody.addEventListener('click', (e) => {
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;
@@ -706,7 +708,7 @@ Alarm silinecek. Emin misiniz?`))) return;
     arBody.innerHTML = rows.map((r) => {
       const [d, t] = fmtDateTime(r.at).split(' ');
       return `
-      <tr data-id="${r.id}">
+      <tr data-id="${r.id}" class="${r.id === arSelectedId ? 'sel' : ''}">
         <td><div class="p-cell">${archivePerson(r)}</div></td>
         <td class="d"><span class="d-date">${d}</span> <span class="d-time">${t}</span></td>
         <td><div class="n-text">${esc(r.notes || '')}</div></td>
@@ -729,6 +731,7 @@ Alarm silinecek. Emin misiniz?`))) return;
       openArView(tr.dataset.id);
     } else {
       arLastTap = { id: tr.dataset.id, t: now };
+      selectArchive(tr.dataset.id);
     }
   });
   async function deleteArchive(id) {
@@ -738,7 +741,14 @@ Alarm silinecek. Emin misiniz?`))) return;
     archive = archive.filter((x) => x.id !== id);
     saveArchive(); renderArchive();
   }
-  attachRowMenu(arBody, (id) => deleteArchive(id));
+  let arSelectedId = null;
+  function selectArchive(id) {
+    arSelectedId = id;
+    arBody.querySelectorAll('tr.sel').forEach((r) => r.classList.remove('sel'));
+    const tr = arBody.querySelector(`tr[data-id="${CSS.escape(id || '')}"]`);
+    if (tr) tr.classList.add('sel');
+  }
+  attachRowMenu(arBody, (id) => deleteArchive(id), (id) => selectArchive(id));
   // Filtreye uyan (ekranda listelenen) arşiv kayıtlarını sil
   $('arDelFiltered').addEventListener('click', async () => {
     if (!arFilteredIds.length) return;
